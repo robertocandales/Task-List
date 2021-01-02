@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import AddingTask from './components/AddingTask';
+import EditTask from './components/EditTask';
 import TaskList from './components/TaskList';
 
 type FormElement = React.FormEvent<HTMLFormElement>;
@@ -12,6 +13,8 @@ function App(): JSX.Element {
   const [newTask, setNewTask] = useState<string>('');
   const [tasks, setTasks] = useState<ITask[]>([]);
   const taskInput = useRef<HTMLInputElement>(null);
+  const [editTask, setEditTask] = useState<boolean>(false);
+  const [indexPosition, setIndexPosition] = useState<number>(0);
 
   const handleSubmit = (e: FormElement): void => {
     e.preventDefault();
@@ -31,20 +34,58 @@ function App(): JSX.Element {
   const handleDelete = (name: string): void => {
     setTasks(tasks.filter((t, i) => t.name !== name));
   };
+
+  //Edit task//
+  const handleEdit = (name: string, index: number): void => {
+    setNewTask(name);
+    setEditTask(true);
+    setIndexPosition(index);
+  };
+  const EdithandleSubmit = (e: FormElement) => {
+    e.preventDefault();
+    EditOneTask(newTask, indexPosition);
+    taskInput.current?.focus();
+    setNewTask('');
+  };
+  const EditOneTask = (nameEdited: string, index: number): void => {
+    const editTask: ITask[] = tasks.map((t: ITask, i: number) => {
+      if (index === i) {
+        return { name: nameEdited, done: t.done };
+      } else {
+        return t;
+      }
+    });
+    setTasks(editTask);
+    setEditTask(false);
+  };
   return (
     <div className='container p-4'>
-      <h1 className='col-md-6 offset-md-3'>Task List</h1>
+      <h1 style={{ textAlign: 'center' }}>Task List</h1>
       <div className='row'>
-        <div className='col-md-6 offset-md-3'>
+        <div className='col-md-12 '>
           <div className='card'>
-            <AddingTask
-              handleSubmit={handleSubmit}
-              taskInput={taskInput}
-              newTask={newTask}
-              setNewTask={setNewTask}
-            />
+            {!editTask ? (
+              <AddingTask
+                handleSubmit={handleSubmit}
+                taskInput={taskInput}
+                newTask={newTask}
+                setNewTask={setNewTask}
+              />
+            ) : (
+              <EditTask
+                EdithandleSubmit={EdithandleSubmit}
+                taskInput={taskInput}
+                newTask={newTask}
+                setNewTask={setNewTask}
+              />
+            )}
           </div>
-          <TaskList tasks={tasks} toggleDoneTask={toggleDoneTask} handleDelete={handleDelete} />
+          <TaskList
+            tasks={tasks}
+            toggleDoneTask={toggleDoneTask}
+            handleDelete={handleDelete}
+            handleEdit={handleEdit}
+          />
         </div>
       </div>
     </div>
